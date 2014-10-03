@@ -1,0 +1,40 @@
+./vty_runcmd.exp -m -f commands.txt ssh -h r144-cme1.rtl -u acappelli -p 6387
+
+sh ephone registered | i Mac|number|Username
+sh ephone unregistered | i Mac|number|Username
+elusive AND boolean is available inside parens: sh ephone registered | i (.*ine.*whisper)
+
+./vty_runcmd.exp -m ssh -h R023-cme1.rtl.apple.com -f ~e0262233/commands.txt -u imanage -p Ju14_ImYFVK0MLH9G
+./vty_runcmd.exp -m ssh -h R385-cme1.rtl.apple.com -f ~e0262233/commands.txt -u imanage -p Ju14_ImYFVK0MLH9G
+./vty_runcmd.exp -m ssh -h R386-cme1.rtl.apple.com -f ~e0262233/commands.txt -u imanage -p Ju14_ImYFVK0MLH9G
+./vty_runcmd.exp -m ssh -h R368-cme1.rtl.apple.com -f ~e0262233/commands.txt -u imanage -p Ju14_ImYFVK0MLH9G
+./vty_runcmd.exp -m ssh -h R489-cme1.rtl.apple.com -f ~e0262233/commands.txt -u imanage -p Ju14_ImYFVK0MLH9G
+./vty_runcmd.exp -m ssh -h R458-cme1.rtl.apple.com -f ~e0262233/commands.txt -u imanage -p Ju14_ImYFVK0MLH9G
+./vty_runcmd.exp -m ssh -h R118-cme1.rtl.apple.com -f ~e0262233/commands.txt -u imanage -p Ju14_ImYFVK0MLH9G
+./vty_runcmd.exp -m ssh -h R616-cme1.rtl.apple.com -f ~e0262233/commands.txt -u imanage -p Ju14_ImYFVK0MLH9G
+
+copy scp://e0262233@17.150.128.71/commands.txt flash0:
+
+Last router above had RADIUS stats incrementing. This was at 150 as of 6/30/14. CHeck again in july.
+
+# Proper US Radius from working router looks like below in R069. See doc RADIUS-PhonExTemplate doc on this computer for template
+# NOTE: For stores inside AMR use the 17.150.5.253 PhoneX server. All others use the 17.0.56.122 server!
+r069-rtr1#sh run | s radius
+aaa group server radius Retail-CDR
+ server-private 17.150.5.253 auth-port 1812 acct-port 1813 non-standard key 7 053D565E22497C061A0E45
+ ip vrf forwarding boh
+ ip radius source-interface GigabitEthernet0/1.224
+ip radius source-interface GigabitEthernet0/1.224
+radius-server attribute 31 mac format ietf
+radius-server attribute 31 send nas-port-detail
+radius-server retransmit 1
+radius-server timeout 10
+radius-server vsa send accounting
+
+
+In an effort to make sure I can catch similar configuration errors in the future I pulled up the ‘diffs’ from HPNA to compare yesterday’s config to the newly repaired config that you have implemented. A few QQs (non urgent; only if you have time):
+Line 43 below shows "aaa accounting connection h323” which differs from the CME as-built. Is that a one-off difference or is that something I can add to the as-built PDF?
+observation: Line 27 changes the ‘aaa group’ name to Retail-CDR blowing away the previous iManage name for that group.
+observation: You remove the 17.209 server and replace it with the new RADIUS host: server-private 17.150.5.253 auth-port 1812 acct-port 1813 non-standard
+observation: VRF and RADIUS lines are added, consistent with the as-built guide
+Lines 44 - 50 removed. That’s one I would have missed. Were those lines you removed or were they automatically replaced because that syntax is deprecated in favor of new style: 'aaa accounting connection h323 start-stop group Retail-CDR’?

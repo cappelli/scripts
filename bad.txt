@@ -1,0 +1,3 @@
+cat: bad_1: Permission denied
+cat: bad_2: Permission denied
+cat: bad_3: Permission denied

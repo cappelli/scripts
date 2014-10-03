@@ -1,0 +1,150 @@
+# SED notes:
+# s: subsitution
+# a: search strings
+# b: replacement strings 
+# sed is essentially grep with replace option. All regex usable in grep are usable in sed
+sed 's/a/b'
+echo 'upstream' | sed 's/up/down/'
+# working with a file one can 
+# add 'g', as below, to say global replace:
+sed 's/pear/mango/g' fruit.txt > mango_fruit.txt
+# use -e to have additional find and replace (use -e after each find/replace) as:
+echo 'During daytime we have sunlight.' | sed -e 's/day/night/' -e 's/sun/moon/'
+# example of using sed with regular expressoins:
+echo "who needs vowels" | sed -E's/[aeiou]/_/g'
+#any delimiter can be used. FOr instance echo 'upstream' | sed 's|up|down|'
+# use sed with -E to get the extended GREP features like +
+# back references (up to 9) are available too as this example shows:
+echo 'daytime' | sed -E 's/(...)time/\1light/'
+
+
+
+#AWK Notes:
+# Official documentation is at http://www.gnu.org/software/gawk/manual/gawk.html (bookmarked)
+# Example scripts and more about records, loops and arrays are at: http://www.ibm.com/developerworks/library/l-awk2
+# Scripting with AWK: see the AwkExampleScript.awk in the /Applications/scripts
+# print the item that comes after the first space
+awk '{print $2}' sampleEphoneData.txt
+
+#Print the entire line with $0
+awk '{print $0}' sampleEphoneData.txt
+
+#Comma in program tells AWK to create a space. A literal comma needs to be created inside quotes
+awk '{print $2, $1, "," $3}' sampleEphoneData.txt
+
+#Print the number of fields using NF:
+awk '{print NF, $0}' sampleEphoneData.txt
+
+#Print the first two fields before and after the colons
+awk -F: '{printf("%s\t%s\n", $1 , $2)}' ephone.txt
+
+#Print only the field immediately after the colons
+awk '{printf("%s\n", $2)}' ephone.txt
+
+# Code Snip:  Use slash to get awk to only print lines containing a regular expression (this grabs phone types):
+awk 'BEGIN{FS="[: ]"} /79../{printf("%s\n", $5)}' ephone.txt
+
+# Code Snip: Use regex to get all the MAC addresses
+awk 'BEGIN{FS="[: ]"} /....\.....\...../{printf("%s\n", $3)}' ephone.txt
+
+#Code Snip: Use regex to print the last field of lines containing 'Username'
+awk 'BEGIN{FS="[:]"} /Username/{printf("%s\n", $(NF-0))}' ephone.txt
+
+
+#Use NF to get awk to only print lines with a specific number of wordsgroups:
+awk 'NF==8{print NF $0}' sampleEphoneData.txt
+#or
+awk 'NF==8' sampleEphoneData.txt
+
+#Use the -f argument to get a file full of awk commands to interact with additional files whose contents are to be manipulated:
+awk -f swap names.txt
+
+#Specify your own delimiter using capital F. This example uses a comma and a tab respectively:
+awk -F , '{print $2}'
+#NOte: this only works on Mac. awk -F t '{print $2}'
+# BEGIN marks the beginning of the input that is sent to the AWK script
+# Like in C, semicolon is used to separate end of one statement and beginning of the next
+The special characters FS are where you declare a "field separator".
+ The special characters RS are where you declare a "Record separator".
+awk 'BEGIN{FS=","; } {print $2}'
+awk 'BEGIN{RS="!"; } {print $2}'
+
+# A cool way to create records out of free for addresses is this:
+# Start with some addresses in this format:
+Athonia Cappelli
+41 Grandview St. #605
+Santa Cruz, CA 95060
+awk 'BEGIN{RS="";FS="\n"} {name=$1;address=$2;citystatezip=$3;print name "," address "," citystatezip}' addresses.txt
+# This script takes a tab delimited file and puts it into an HTML table
+#–––––––––––––––––––––––––––––––––
+BEGIN {
+		FS="\t";
+		print "<table>";
+		print "<tr>";
+		print "\t<th>";
+		print "\t<th>Bowler</th>";
+		for ( i=1; i<=7; i++ ) {
+				print "\t<th>Round", i "<th>";
+		}
+		print "</tr>";
+}				
+
+END
+#––––––––––––––––––––––––––––––––
+
+#This script prints only lines from an HTML or XML doc with complete HTML entities:
+#Field separators are designated as regex equating to < or > so if the script encountered
+#the following line:
+#<li>This is a <i>list</i> item</li>
+#...it would count the number of fields (NF) as 9 because
+#NF $1 is the beginning empty field"" $2 is "li", $3 is "this is a " $4 is "i"
+#$5 is "list", $6 is "/li", $7 is " item", $8 is "/li" and $9 is empty ""
+BEGIN { 
+		FS="[<>]";
+	}
+	
+	/<<.*>$/ {
+		if ( $(NF-1) == ("/" $2) ) {
+			print;
+		}
+	}
+	
+
+#printf() syntax uses 
+	printf ( format, value... )
+
+#String manipulation functions
+sub ( regexp, newval [, string] )
+gsub ( regexp, newval [, string] )
+split ( string, array [, regexp] )
+
+# Examples for above. This removes/replaces instances of 'the'
+# Note: gsub is global substitue which replaces all occurrences within a line 
+# final example replaces instances of comma with a tab
+awk '{sub(/the/,""); print}' filename.txt
+awk '{sub(/the[ym],"all of them"); print}' filename.txt
+awk '{gsub(/the[ym],"all of them"); print}' filename.txt
+awk -F, 'BEGIN{split(/$1, a, / /); print a[2] ", " a[1], $2, $3}' filename.txt
+
+#OFS means Output field separater and ORS is Output Record separator.
+#Print the penultimate value in a list using:
+awk '{print ($NF-1)}' addresses.txt
+# ++ increments the values passed two it on either side
+#-- subtracts
+# = sets a value while == does a comparison
+# Math operators: +,-,*,/,%,^ (carrot is raise to the power of)
+# assignment operators: =,+=,-=,*=,/=,%=,^=
+# coparison operators: ==,!=,<,<=,>,>,>=
+# Regular Expression comparison: ~,!~
+# Regex is between // as in /abc/ which is the literal string. It's not an OR operator
+# . matches any single character, e.g. /a.c/ wold match abc
+# backslash escapes characters
+# %s means output a string while %d means output an integer. Preface %s with numbers to specify a field width (e.g. %20s) = 20 characters long
+# ^ matches beginning of line and $ matches end of line
+# [] matches any single character in the set. /a[xyz]c/ would match axc
+# /a[a-z]c/ matches "abc"; while /a[^a-z]c/ has the carrot meaning "not any of the following"
+# /ab?c/ matches abc or ac because the ? means previous character is optional
+# /ab{3}c/ matches "abbbc" because brackets indicate repeats of that number (3)
+# adding a comma as in /ab{3,4}c/ matches between 3 and 4 repeats 
+# \t and \n must be used with printf always because it gives complete control over output
+# 
